@@ -160,7 +160,7 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
                     y: { duration: 0.25, repeat: running ? Infinity : 0, ease: "easeInOut" },
                   }}
                 >
-                  <HorseIcon color={h.silkPrimary} secondary={h.silkSecondary} number={h.number} />
+                  <HorseIcon number={h.number} />
                   {/* Winner glow */}
                   {hasCrossed && h.finalPosition === 1 && (
                     <motion.div
