@@ -6,7 +6,7 @@ import horseRed from "@/assets/horse-red.png";
 import horseMaroon from "@/assets/horse-maroon.png";
 
 const SPRITES: Record<number, { src: string; flip: boolean }> = {
-  4: { src: horseCyan, flip: false },
+  4: { src: horseCyan, flip: true },
   3: { src: horsePink, flip: false },
   1: { src: horseGreen, flip: true },   // generated facing left → mirror
   5: { src: horseBlue, flip: true },
