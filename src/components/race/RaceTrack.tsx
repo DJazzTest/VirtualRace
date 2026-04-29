@@ -88,16 +88,34 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
               className="relative flex items-center gap-3 my-2 rounded-lg pr-10"
               style={{ height: LANE_HEIGHT - 10 }}
             >
-              {/* Position badge slot */}
-              <div className="w-12 flex justify-center shrink-0">
-                <AnimatePresence>
-                  {(finished || hasCrossed) && (
+              {/* Trap number — always visible; swaps to medal when finished */}
+              <div className="w-12 flex justify-center shrink-0 relative">
+                <AnimatePresence mode="wait">
+                  {finished || hasCrossed ? (
                     <motion.div
+                      key="medal"
                       initial={{ scale: 0, rotate: -90 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: "spring", stiffness: 260, damping: 18 }}
                     >
                       <PositionMedal position={h.finalPosition} size={42} />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="trap"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="w-[42px] h-[42px] rounded-md flex items-center justify-center font-black text-lg border-2"
+                      style={{
+                        background: h.silkPrimary,
+                        color: "oklch(0.98 0 0)",
+                        borderColor: "oklch(0.82 0.16 85 / 0.6)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                        textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+                      }}
+                    >
+                      {h.number}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -148,8 +166,8 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
 
                 {/* Horse */}
                 <motion.div
-                  className="absolute"
-                  style={{ left: 0, top: "calc(50% - 70px)" }}
+                  className="absolute top-1/2 -translate-y-1/2"
+                  style={{ left: 0 }}
                   initial={{ x: 0 }}
                   animate={{
                     x: running || finished ? "calc(100% - 110px)" : 0,
