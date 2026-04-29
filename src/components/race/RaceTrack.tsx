@@ -144,7 +144,7 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
               </div>
 
               {/* Lane (track for the horse) */}
-              <div className="relative flex-1 h-full">
+              <div className="relative flex-1 h-full overflow-hidden">
                 {/* Lane line */}
                 <div className="absolute inset-x-0 top-1/2 h-px bg-foreground/10" />
 
