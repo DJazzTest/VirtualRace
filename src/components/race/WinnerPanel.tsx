@@ -43,7 +43,7 @@ export function WinnerPanel({ finished }: { finished: boolean }) {
                 }}
               >
                 <div className="scale-110">
-                  <HorseIcon color={h.silkPrimary} secondary={h.silkSecondary} number={h.number} />
+                  <HorseIcon number={h.number} />
                 </div>
                 <div
                   className="mt-2 px-4 py-1 rounded-full text-xs font-black tracking-widest"
