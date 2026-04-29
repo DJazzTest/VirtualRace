@@ -148,8 +148,8 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
 
                 {/* Horse */}
                 <motion.div
-                  className="absolute top-1/2"
-                  style={{ left: 0, transform: "translateY(-58%)" }}
+                  className="absolute"
+                  style={{ left: 0, top: "calc(50% - 70px)" }}
                   initial={{ x: 0 }}
                   animate={{
                     x: running || finished ? "calc(100% - 110px)" : 0,
