@@ -82,6 +82,7 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
           const hasCrossed = crossed.has(h.id);
           // travel time: winner fastest
           const travelTime = RACE_DURATION + (h.finalPosition - 1) * 0.18;
+          const isPlaced = h.finalPosition <= 3;
           return (
             <div
               key={h.id}
