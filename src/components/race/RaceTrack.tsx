@@ -82,6 +82,7 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
           const hasCrossed = crossed.has(h.id);
           // travel time: winner fastest
           const travelTime = RACE_DURATION + (h.finalPosition - 1) * 0.18;
+          const isPlaced = h.finalPosition <= 3;
           return (
             <div
               key={h.id}
@@ -143,7 +144,7 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
               </div>
 
               {/* Lane (track for the horse) */}
-              <div className="relative flex-1 h-full">
+              <div className="relative flex-1 h-full overflow-hidden">
                 {/* Lane line */}
                 <div className="absolute inset-x-0 top-1/2 h-px bg-foreground/10" />
 
@@ -170,11 +171,19 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
                   style={{ left: 0 }}
                   initial={{ x: 0 }}
                   animate={{
-                    x: running || finished ? "calc(100% - 110px)" : 0,
+                    x:
+                      running || finished
+                        ? isPlaced
+                          ? "calc(100% - 110px)"
+                          : "calc(100% + 40px)"
+                        : 0,
                     y: running && !hasCrossed ? [0, -2, 0, 2, 0] : 0,
                   }}
                   transition={{
-                    x: { duration: travelTime, ease: [0.25, 0.1, 0.25, 1] },
+                    x: {
+                      duration: isPlaced ? travelTime : travelTime + 0.6,
+                      ease: isPlaced ? [0.25, 0.1, 0.25, 1] : [0.4, 0, 0.6, 1],
+                    },
                     y: { duration: 0.25, repeat: running ? Infinity : 0, ease: "easeInOut" },
                   }}
                 >
