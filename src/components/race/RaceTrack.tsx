@@ -1,25 +1,36 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Crown, Sparkles } from "lucide-react";
-import { HORSES } from "./types";
+import type { Horse } from "./types";
 import { Silks } from "./Silks";
 import { PositionMedal } from "./PositionMedal";
 import { HorseIcon } from "./HorseIcon";
 
 type Props = {
+  horses: Horse[];
   running: boolean;
   finished: boolean;
+  mode?: "predictor" | "results";
+  placedCutoffPosition?: number;
   onFinish: () => void;
 };
 
 const RACE_DURATION = 4.5; // seconds
 const LANE_HEIGHT = 78;
 
-// Order rendered top→bottom matches the screenshot (winner first)
-const LANE_ORDER = [...HORSES].sort((a, b) => a.finalPosition - b.finalPosition);
-
-export function RaceTrack({ running, finished, onFinish }: Props) {
+export function RaceTrack({
+  horses,
+  running,
+  finished,
+  mode = "predictor",
+  placedCutoffPosition = 3,
+  onFinish,
+}: Props) {
   const [crossed, setCrossed] = useState<Set<number>>(new Set());
+  const laneOrder = useMemo(
+    () => [...horses].sort((a, b) => a.finalPosition - b.finalPosition),
+    [horses],
+  );
 
   useEffect(() => {
     if (!running) {
@@ -28,7 +39,7 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
     }
     // Schedule cross events based on finish offsets
     const timers: ReturnType<typeof setTimeout>[] = [];
-    LANE_ORDER.forEach((h) => {
+    laneOrder.forEach((h) => {
       const delay = (RACE_DURATION + (h.finalPosition - 1) * 0.18) * 1000;
       timers.push(
         setTimeout(() => {
@@ -36,9 +47,9 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
         }, delay)
       );
     });
-    timers.push(setTimeout(onFinish, (RACE_DURATION + LANE_ORDER.length * 0.18 + 0.4) * 1000));
+    timers.push(setTimeout(onFinish, (RACE_DURATION + laneOrder.length * 0.18 + 0.4) * 1000));
     return () => timers.forEach(clearTimeout);
-  }, [running, onFinish]);
+  }, [running, onFinish, laneOrder]);
 
   return (
     <div
@@ -67,26 +78,55 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
       <div className="relative px-4 pb-6">
         {/* Finish line */}
         <div
-          className="absolute top-0 bottom-0 w-6 z-20 pointer-events-none"
+          className="absolute top-0 bottom-0 z-20 pointer-events-none flex items-center"
           style={{
-            right: "16px",
-            backgroundImage:
-              "repeating-conic-gradient(oklch(0.98 0 0) 0% 25%, oklch(0.1 0 0) 0% 50%)",
-            backgroundSize: "12px 12px",
-            opacity: 0.85,
-            boxShadow: "0 0 25px oklch(0.82 0.16 85 / 0.4)",
+            right: "10px",
+            boxShadow: "0 0 25px oklch(0.82 0.16 85 / 0.35)",
           }}
-        />
+        >
+          <div
+            className="h-full w-[9px]"
+            style={{
+              backgroundImage:
+                "repeating-conic-gradient(oklch(0.98 0 0) 0% 25%, oklch(0.1 0 0) 0% 50%)",
+              backgroundSize: "9px 9px",
+              borderLeft: "1px solid oklch(0.08 0 0 / 0.6)",
+              borderRight: "1px solid oklch(0.08 0 0 / 0.6)",
+            }}
+          />
+          <div
+            className="h-full w-[14px] flex items-center justify-center"
+            style={{
+              background: "oklch(0.12 0.02 35 / 0.92)",
+              borderLeft: "1px solid oklch(0.9 0.02 90 / 0.15)",
+            }}
+          >
+            <div
+              className="flex flex-col items-center justify-center text-white font-black leading-none"
+              style={{ fontSize: "9px", letterSpacing: "0.02em", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+            >
+              <span>F</span>
+              <span>I</span>
+              <span>N</span>
+              <span>I</span>
+              <span>S</span>
+              <span>H</span>
+            </div>
+          </div>
+        </div>
 
-        {LANE_ORDER.map((h, idx) => {
+        {laneOrder.map((h) => {
           const hasCrossed = crossed.has(h.id);
           // travel time: winner fastest
           const travelTime = RACE_DURATION + (h.finalPosition - 1) * 0.18;
-          const isPlaced = h.finalPosition <= 3;
+          const shouldShowHorseAfterFinish =
+            mode === "results"
+              ? h.finalPosition <= Math.max(1, Math.floor(placedCutoffPosition || 1))
+              : (h.isTip ?? h.finalPosition === 1);
           return (
             <div
               key={h.id}
-              className="relative flex items-center gap-3 my-2 rounded-lg pr-10"
+              className="relative flex items-center gap-1 md:gap-3 my-2 rounded-lg pr-0 md:pr-16"
               style={{ height: LANE_HEIGHT - 10 }}
             >
               {/* Trap number — always visible; swaps to medal when finished */}
@@ -107,7 +147,7 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="w-[42px] h-[42px] rounded-md flex items-center justify-center font-black text-lg border-2"
+                      className="w-8 h-8 md:w-[42px] md:h-[42px] rounded-md flex items-center justify-center font-black text-sm md:text-lg border-2"
                       style={{
                         background: h.silkPrimary,
                         color: "oklch(0.98 0 0)",
@@ -123,18 +163,28 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
               </div>
 
               {/* Silks */}
-              <div className="shrink-0">
-                <Silks primary={h.silkPrimary} secondary={h.silkSecondary} size={42} />
+              <div className="hidden md:block shrink-0">
+                <Silks
+                  primary={h.silkPrimary}
+                  secondary={h.silkSecondary}
+                  silkUrl={h.silkUrl}
+                  size={42}
+                />
               </div>
 
               {/* Info */}
-              <div className="w-44 shrink-0 z-10">
+              <div className="hidden md:block w-44 shrink-0 z-10">
                 <div className="text-[13px] font-bold text-foreground flex items-center gap-2">
                   <span className="text-muted-foreground">({h.number})</span>
                   <span className="truncate">{h.name}</span>
                   {h.isTip && (
                     <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-500 text-white">
                       TIP
+                    </span>
+                  )}
+                  {h.isFavourite && (
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-black">
+                      FAV
                     </span>
                   )}
                 </div>
@@ -166,55 +216,71 @@ export function RaceTrack({ running, finished, onFinish }: Props) {
                 />
 
                 {/* Horse */}
-                <motion.div
-                  className="absolute top-1/2 -translate-y-1/2"
-                  style={{ left: 0 }}
-                  initial={{ x: 0 }}
-                  animate={{
-                    x:
-                      running || finished
-                        ? isPlaced
-                          ? "calc(100% - 110px)"
-                          : "calc(100% + 40px)"
-                        : 0,
-                    y: running && !hasCrossed ? [0, -2, 0, 2, 0] : 0,
-                  }}
-                  transition={{
-                    x: {
-                      duration: isPlaced ? travelTime : travelTime + 0.6,
-                      ease: isPlaced ? [0.25, 0.1, 0.25, 1] : [0.4, 0, 0.6, 1],
-                    },
-                    y: { duration: 0.25, repeat: running ? Infinity : 0, ease: "easeInOut" },
-                  }}
-                >
-                  <HorseIcon number={h.number} />
-                  {/* Winner glow */}
-                  {hasCrossed && h.finalPosition === 1 && (
+                {(!finished || (finished && shouldShowHorseAfterFinish)) && (
+                  <motion.div
+                    className="absolute top-1/2 -translate-y-1/2"
+                    style={{ left: "20px" }}
+                    initial={{ x: 0 }}
+                    animate={{
+                      x: running || finished ? "calc(100% + 560px)" : 0,
+                      y: running && !hasCrossed ? [0, -2, 0, 2, 0] : 0,
+                    }}
+                    transition={{
+                      x: {
+                        duration: travelTime,
+                        ease: [0.25, 0.1, 0.25, 1],
+                      },
+                      y: { duration: 0.25, repeat: running ? Infinity : 0, ease: "easeInOut" },
+                    }}
+                  >
                     <motion.div
-                      className="absolute inset-0 -z-10"
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: [0, 1, 0.4], scale: [0.5, 1.6, 1.4] }}
-                      transition={{ duration: 1.2 }}
-                      style={{
-                        background:
-                          "radial-gradient(circle, oklch(0.92 0.17 90 / 0.7), transparent 70%)",
-                        filter: "blur(12px)",
+                      animate={{
+                        rotate: running ? [0, 2, -2, 0] : 0,
                       }}
-                    />
-                  )}
-                </motion.div>
+                      transition={{
+                        rotate: { duration: 0.15, repeat: running ? Infinity : 0, ease: "easeInOut" },
+                      }}
+                    >
+                      <HorseIcon number={h.number} />
+                    </motion.div>
+                    {/* Winner glow */}
+                    {hasCrossed && h.finalPosition === 1 && (
+                      <motion.div
+                        className="absolute inset-0 -z-10"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: [0, 1, 0.4], scale: [0.5, 1.6, 1.4] }}
+                        transition={{ duration: 1.2 }}
+                        style={{
+                          background:
+                            "radial-gradient(circle, oklch(0.92 0.17 90 / 0.7), transparent 70%)",
+                          filter: "blur(12px)",
+                        }}
+                      />
+                    )}
+                  </motion.div>
+                )}
               </div>
 
               {/* Odds */}
               <div
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-30 px-2.5 py-1 rounded-md font-bold text-[12px] border"
+                className={`${running ? "hidden" : "block"} md:hidden ml-1 px-2 py-0.5 rounded-md font-bold text-[11px] border shrink-0`}
                 style={{
                   background: "oklch(0.16 0.05 265 / 0.95)",
                   borderColor: "oklch(0.82 0.16 85 / 0.4)",
                   color: "oklch(0.95 0.05 90)",
                 }}
               >
-                {h.odds}
+                {String(h.odds || "—").trim() || "—"}
+              </div>
+              <div
+                className="hidden md:block absolute right-6 top-1/2 -translate-y-1/2 z-30 px-2.5 py-1 rounded-md font-bold text-[12px] border"
+                style={{
+                  background: "oklch(0.16 0.05 265 / 0.95)",
+                  borderColor: "oklch(0.82 0.16 85 / 0.4)",
+                  color: "oklch(0.95 0.05 90)",
+                }}
+              >
+                {String(h.odds || "—").trim() || "—"}
               </div>
 
               {/* Cross-line flash */}

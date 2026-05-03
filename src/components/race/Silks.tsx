@@ -1,6 +1,30 @@
-type Props = { primary: string; secondary: string; size?: number };
+type Props = { primary: string; secondary: string; silkUrl?: string; size?: number };
 
-export function Silks({ primary, secondary, size = 40 }: Props) {
+export function Silks({ primary, secondary, silkUrl, size = 40 }: Props) {
+  if (silkUrl && silkUrl.trim().length > 0) {
+    return (
+      <div
+        className="rounded-md overflow-hidden border"
+        style={{
+          width: size,
+          height: size,
+          borderColor: "oklch(0.82 0.16 85 / 0.4)",
+          background: "oklch(0.21 0.055 265)",
+        }}
+      >
+        <img
+          src={silkUrl}
+          alt="Silks"
+          width={size}
+          height={size}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    );
+  }
+
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" className="rounded-md overflow-hidden">
       <defs>

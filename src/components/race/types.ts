@@ -7,9 +7,25 @@ export type Horse = {
   odds: string;
   silkPrimary: string;
   silkSecondary: string;
+  silkUrl?: string;
   finalPosition: number; // 1 = winner
   score: number;
   isTip?: boolean;
+  isFavourite?: boolean;
+};
+
+export type VirtualRacePayload = {
+  race?: {
+    offTime?: string;
+    meeting?: string;
+    title?: string;
+    distance?: string;
+    runnerCount?: number;
+    dataQualityScore?: number;
+    mode?: "predictor" | "results";
+    placedCutoffPosition?: number;
+  };
+  horses?: Horse[];
 };
 
 export const HORSES: Horse[] = [
@@ -44,3 +60,27 @@ export const HORSES: Horse[] = [
     finalPosition: 6, score: 62,
   },
 ];
+
+export function parseVirtualRacePayload(search: string): VirtualRacePayload | null {
+  try {
+    const params = new URLSearchParams(search);
+    const encoded = params.get("raceData");
+    if (!encoded) return null;
+
+    try {
+      const parsedDirect = JSON.parse(decodeURIComponent(encoded)) as VirtualRacePayload;
+      if (parsedDirect && typeof parsedDirect === "object") return parsedDirect;
+    } catch {
+      // Fallback for legacy base64 payload format.
+    }
+
+    const binary = window.atob(encoded);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    const decoded = new TextDecoder().decode(bytes);
+    const parsed = JSON.parse(decoded) as VirtualRacePayload;
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
