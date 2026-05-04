@@ -24,6 +24,8 @@ export type VirtualRacePayload = {
     dataQualityScore?: number;
     mode?: "predictor" | "results";
     placedCutoffPosition?: number;
+    raceId?: string | number;
+    raceBackgroundSeed?: string;
   };
   horses?: Horse[];
 };

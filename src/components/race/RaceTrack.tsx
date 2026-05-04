@@ -5,6 +5,7 @@ import type { Horse } from "./types";
 import { Silks } from "./Silks";
 import { PositionMedal } from "./PositionMedal";
 import { HorseIcon } from "./HorseIcon";
+import { raceTrackBackgroundImageLayers, selectRaceTrackBackground } from "@/lib/raceTrackBackground";
 
 type Props = {
   horses: Horse[];
@@ -13,6 +14,8 @@ type Props = {
   mode?: "predictor" | "results";
   placedCutoffPosition?: number;
   onFinish: () => void;
+  raceBackgroundSeed?: string;
+  backdropNowMs?: number;
 };
 
 const RACE_DURATION = 4.5; // seconds
@@ -25,7 +28,21 @@ export function RaceTrack({
   mode = "predictor",
   placedCutoffPosition = 3,
   onFinish,
+  raceBackgroundSeed,
+  backdropNowMs,
 }: Props) {
+  const { url: trackPhoto, tone: trackTone } = useMemo(
+    () =>
+      selectRaceTrackBackground({
+        seed: raceBackgroundSeed,
+        nowMs: backdropNowMs ?? Date.now(),
+      }),
+    [raceBackgroundSeed, backdropNowMs],
+  );
+  const trackBgLayers = useMemo(
+    () => raceTrackBackgroundImageLayers(trackPhoto, trackTone),
+    [trackPhoto, trackTone],
+  );
   const [crossed, setCrossed] = useState<Set<number>>(new Set());
   const laneOrder = useMemo(
     () => [...horses].sort((a, b) => a.finalPosition - b.finalPosition),
@@ -53,23 +70,30 @@ export function RaceTrack({
 
   return (
     <div
-      className="relative rounded-2xl overflow-hidden border border-border"
+      className="relative rounded-2xl border border-white/10"
       style={{
-        background:
-          "linear-gradient(180deg, oklch(0.22 0.05 265) 0%, oklch(0.16 0.05 265) 30%, oklch(0.32 0.06 55) 35%, oklch(0.22 0.05 50) 100%)",
+        backgroundColor: "oklch(0.08 0.04 265)",
+        backgroundImage: trackBgLayers,
+        backgroundSize: "cover",
+        backgroundPosition: "center bottom",
+        backgroundRepeat: "no-repeat",
         boxShadow: "var(--shadow-card)",
+        overflowX: "clip",
+        overflowY: "visible",
       }}
     >
       {/* Header */}
       <div className="relative z-10 pt-5 pb-3 text-center">
-        <div className="flex items-center justify-center gap-3 text-primary">
-          <span className="h-px w-10 bg-primary/50" />
+        <div className="flex items-center justify-center gap-3 text-[oklch(0.88_0.14_88)]">
+          <span className="h-px w-10 bg-[oklch(0.88_0.14_88/0.45)]" />
           <Crown className="w-5 h-5" />
-          <h2 className="text-2xl font-black tracking-[0.3em]">THE FINISH</h2>
+          <h2 className="text-2xl font-black tracking-[0.3em] text-[oklch(0.9_0.13_85)] [text-shadow:0_2px_12px_rgba(0,0,0,0.75)]">
+            THE FINISH
+          </h2>
           <Crown className="w-5 h-5" />
-          <span className="h-px w-10 bg-primary/50" />
+          <span className="h-px w-10 bg-[oklch(0.88_0.14_88/0.45)]" />
         </div>
-        <p className="text-xs tracking-[0.3em] text-muted-foreground mt-1">
+        <p className="text-xs tracking-[0.3em] text-[oklch(0.88_0.02_95)] [text-shadow:0_2px_8px_rgba(0,0,0,0.85)] mt-1">
           {finished ? "OFFICIAL RESULT" : running ? "RACE IN PROGRESS" : "READY TO RACE"}
         </p>
       </div>
@@ -126,7 +150,7 @@ export function RaceTrack({
           return (
             <div
               key={h.id}
-              className="relative flex items-center gap-1 md:gap-3 my-2 rounded-lg pr-0 md:pr-16"
+              className="relative flex items-center gap-1 md:gap-3 my-2 rounded-lg py-1.5 pr-0 md:pr-16 bg-black/25 ring-1 ring-white/10 backdrop-blur-[0.5px]"
               style={{ height: LANE_HEIGHT - 10 }}
             >
               {/* Trap number — always visible; swaps to medal when finished */}
@@ -173,8 +197,8 @@ export function RaceTrack({
               </div>
 
               {/* Info */}
-              <div className="hidden md:block w-44 shrink-0 z-10">
-                <div className="text-[13px] font-bold text-foreground flex items-center gap-2">
+              <div className="hidden md:block w-44 shrink-0 z-10 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+                <div className="text-[13px] font-bold text-white flex items-center gap-2">
                   <span className="text-muted-foreground">({h.number})</span>
                   <span className="truncate">{h.name}</span>
                   {h.isTip && (
@@ -188,13 +212,13 @@ export function RaceTrack({
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-muted-foreground tracking-wider">
+                <div className="text-[11px] text-white/80 tracking-wider">
                   {h.jockey} • {h.weight}
                 </div>
               </div>
 
               {/* Lane (track for the horse) */}
-              <div className="relative flex-1 h-full overflow-hidden">
+              <div className="relative flex-1 h-full min-h-0" style={{ overflowX: "clip", overflowY: "visible" }}>
                 {/* Lane line */}
                 <div className="absolute inset-x-0 top-1/2 h-px bg-foreground/10" />
 
