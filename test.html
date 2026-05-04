@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirtualRace Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #0b1221;
+            color: white;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #10b981; }
+        .error { background: #ef4444; }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>VirtualRace Test Page</h1>
+        <div id="status" class="status">Testing VirtualRace components...</div>
+        
+        <h2>Test 1: Basic HTML Load</h2>
+        <div id="basic-test">Loading...</div>
+        
+        <h2>Test 2: VirtualRace Embed</h2>
+        <iframe id="virtual-race-frame" src="/"></iframe>
+        
+        <h2>Test 3: Build Output Check</h2>
+        <div id="build-test">Checking build files...</div>
+    </div>
+
+    <script>
+        // Test 1: Basic functionality
+        document.getElementById('basic-test').innerHTML = '✅ Basic HTML loaded successfully';
+        
+        // Test 2: Check if VirtualRace loads
+        const iframe = document.getElementById('virtual-race-frame');
+        iframe.onload = function() {
+            document.getElementById('status').innerHTML = '✅ VirtualRace loaded successfully';
+            document.getElementById('status').className = 'status success';
+        };
+        iframe.onerror = function() {
+            document.getElementById('status').innerHTML = '❌ VirtualRace failed to load';
+            document.getElementById('status').className = 'status error';
+        };
+        
+        // Test 3: Check build files
+        fetch('/assets/index-B0Fqsvhj.js')
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('build-test').innerHTML = '✅ Build files found';
+                } else {
+                    document.getElementById('build-test').innerHTML = '❌ Build files missing';
+                }
+            })
+            .catch(() => {
+                document.getElementById('build-test').innerHTML = '❌ Error checking build files';
+            });
+    </script>
+</body>
+</html>
